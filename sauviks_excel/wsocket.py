@@ -1,11 +1,10 @@
 from SmartApi.smartWebSocketV2 import SmartWebSocketV2
 from logzero import logger
-from main import credentials, login
-from toolkit.fileutils import Fileutils
-from pprint import pprint
+from api_helper import credentials, login
+from __init__ import FUTL, CRED
 
-FUTL = Fileutils()
-config = FUTL.get_lst_fm_yml("../../angel_one.yml")
+from pprint import pprint
+config = FUTL.get_lst_fm_yml(CRED)
 print(config)
 obj_angel = login(config)
 print(obj_angel)
