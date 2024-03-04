@@ -1,4 +1,6 @@
 from omspy_brokers.angel_one import AngelOne
+from __init__ import UTIL
+from pprint import pprint
 
 
 def login(config):
@@ -21,9 +23,24 @@ def credentials(obj_angel):
     return dct
 
 
+def tkn_from_config(broker, search: list) -> dict:
+    dct = {}
+    for exchsym in search:
+        lst = exchsym.split(":")
+        resp = broker.searchScrip(lst[0], lst[1])
+        pprint(resp)
+        token = resp["data"][0]["symboltoken"]
+        dct.update({lst[1]: {"exchange": lst[0], "token": token}})
+        print(token)
+        UTIL.slp_for(2)
+    return dct
+
+
 if __name__ == "__main__":
     from __init__ import CRED, FUTL
 
-    config = FUTL.get_lst_fm_yml(CRED)
-    api = login(config)
-    print(credentials(api))
+    dct = FUTL.get_lst_fm_yml(CRED)
+    print(dct)
+    api = login(dct["angelone"])
+    dct_sym_dtls: dict = tkn_from_config(dct["search"])
+    print(dct_sym_dtls)
