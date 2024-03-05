@@ -5,19 +5,18 @@ from pprint import pprint
 import pandas as pd
 import xlwings as xw
 import os
+import traceback
+
+input_xlsx = "Books1.xlsx"
 
 
-def addActivate(wb, sheetName, template=None):
+def addActivate(wb, sheetName):
     # https://stackoverflow.com/questions/60432751/how-to-add-new-sheet-if-its-not-exist-in-python-using-xlwings
     try:
-        sht = wb.sheets(sheetName).activate()
+        sht = wb.sheets(sheetName)
     except Exception as e:
-        print(e)
-        if template:
-            template.sheets["Template"].api.Copy(wb.sheets.active.api)
-            sht = wb.sheets["Template"].api.Name = sheetName
-        else:
-            sht = wb.sheets.add(sheetName)
+        traceback.print_exc()
+        sht = wb.sheets.add(sheetName)
     return sht
 
 
@@ -34,11 +33,8 @@ def wsocket(**dct):
     return sws
 
 
-def run(dct, token_list):
-    input_xlsx = "Books1.xlsx"
-    global wb, ws1, ws2, df1, df2
-    df1 = pd.DataFrame()
-    df2 = pd.DataFrame()
+def get_workbook():
+
     if os.path.isfile(input_xlsx):
         wb = xw.Book(input_xlsx)
     else:
@@ -46,10 +42,16 @@ def run(dct, token_list):
         wb.save(input_xlsx)
         wb = xw.Book(input_xlsx)
 
-    # websocket constants
-    ws1 = addActivate(wb, 'Sheet1')
-    ws2 = addActivate(wb, 'Sheet2')
+    return wb
 
+
+wb = get_workbook()
+
+
+def run(dct, token_list):
+    global df1, df2
+    df1 = pd.DataFrame()
+    df2 = pd.DataFrame()
     correlation_id = "sauviks"
     action = 1
     mode = 3
@@ -66,7 +68,53 @@ def run(dct, token_list):
             sws.subscribe(correlation_id, mode, token_list)
 
     def on_data(wsapp, message):
-        pprint(message)
+        global df1, df2
+        if isinstance(message, dict):
+            pprint(message)
+            _token_list: list = token_list[0].get("tokens")
+            idx = _token_list.index(message.get("token", "0"))
+            df_msg = {
+                "Last Traded Time": message.get("last_traded_timestamp"),
+                "Top Buy Price": max(
+                    (
+                        message.get("best_5_buy_data")[i].get("price")
+                        for i in range(0, 5)
+                    )
+                ),
+                "Bidx1": message.get("best_5_buy_data")[0].get("price"),
+                "Bidx2": message.get("best_5_buy_data")[1].get("price"),
+                "Bidx3": message.get("best_5_buy_data")[2].get("price"),
+                "Bidx4": message.get("best_5_buy_data")[3].get("price"),
+                "Bidx5": message.get("best_5_buy_data")[4].get("price"),
+                "Volume": message.get("volume_trade_for_the_day"),
+                "Last Traded Price": message.get("last_traded_price"),
+                "Open Interest": message.get("open_interest"),
+                "Top Sell Price": max(
+                    (
+                        message.get("best_5_sell_data")[i].get("price")
+                        for i in range(0, 5)
+                    )
+                ),
+                "Askx1": message.get("best_5_sell_data")[0].get("price"),
+                "Askx2": message.get("best_5_sell_data")[1].get("price"),
+                "Askx3": message.get("best_5_sell_data")[2].get("price"),
+                "Askx4": message.get("best_5_sell_data")[3].get("price"),
+                "Askx5": message.get("best_5_sell_data")[4].get("price"),
+            }
+            if idx == 0:
+                try:
+                    df1 = pd.concat([df1, pd.DataFrame([df_msg])], ignore_index=True)
+                    ws1 = addActivate(wb, "Sheet1")
+                    ws1["A1"].value = df1
+                except:
+                    traceback.print_exc()
+            elif idx == 1:
+                try:
+                    df2= pd.concat([df2, pd.DataFrame([df_msg])], ignore_index=True)
+                    ws2 = addActivate(wb, "Sheet2")
+                    ws2["A1"].value = df2
+                except:
+                    traceback.print_exc()
 
     def on_error(wsapp, error):
         logger.error(error)
@@ -79,6 +127,7 @@ def run(dct, token_list):
 
     def close_connection():
         sws.close_connection()
+        wb.save(input_xlsx)
 
     # Assign the callbacks.
     sws.on_open = on_open
