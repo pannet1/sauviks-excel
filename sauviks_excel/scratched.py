@@ -75,10 +75,10 @@ class WebsocketClient():
 if __name__ == "__main__":
     from toolkit.fileutils import Fileutils
     from time import sleep
-    from main import login, credentials
+    from api_helper import login, credentials
 
     FUTL = Fileutils()
-    config = FUTL.get_lst_fm_yml("../../angel_one.yml")
+    config = FUTL.get_lst_fm_yml("../../sauviks-excel.yml")
     obj_angel = login(config)
     dct = credentials(obj_angel)
     t1 = WebsocketClient(dct)
