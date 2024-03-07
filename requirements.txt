@@ -5,3 +5,7 @@ pydantic<2.0
 pyotp
 pendulum
 smartapi-python==1.4.1
+logzero
+pandas
+pyaml
+websocket-client
