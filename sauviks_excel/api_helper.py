@@ -42,5 +42,19 @@ if __name__ == "__main__":
     dct = FUTL.get_lst_fm_yml(CRED)
     print(dct)
     api = login(dct["angelone"])
-    dct_sym_dtls: dict = tkn_from_config(dct["search"])
+    dct_sym_dtls: dict = tkn_from_config(api.obj, dct["search"])
     print(dct_sym_dtls)
+
+    def greeks(broker):
+        route = {
+            "api.market.greeks": "/rest/secure/angelbroking/marketData/v1/optionGreek"
+        }
+        broker._routes.update(route)
+        params = {
+            "name": "TCS",
+            "expirydate": "28MAR2024"
+        }
+        marketDataResult = broker._postRequest("api.market.greeks", params)
+        return marketDataResult
+
+    print(greeks(api.obj))
