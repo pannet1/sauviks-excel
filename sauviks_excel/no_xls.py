@@ -8,9 +8,6 @@ import traceback
 
 input_xlsx = "Books1.xlsx"
 
-df1 = pd.DataFrame()
-df2 = pd.DataFrame()
-
 
 def wsocket(**dct):
     # retry_strategy=1 for exponential retry mechanism
@@ -26,6 +23,9 @@ def wsocket(**dct):
 
 
 def run(dct, token_list):
+    global df1, df2
+    df1 = pd.DataFrame()
+    df2 = pd.DataFrame()
     correlation_id = "sauviks"
     action = 1
     mode = 3
@@ -44,19 +44,31 @@ def run(dct, token_list):
     def on_data(wsapp, message):
         global df1, df2
         if isinstance(message, dict):
+            pprint(message)
             _token_list: list = token_list[0].get("tokens")
             idx = _token_list.index(message.get("token", "0"))
             df_msg = {
                 "Last Traded Time": message.get("last_traded_timestamp"),
-                "Bidx1": message["best_5_buy_data"][0]["price"] / 100,
-                "Qtyx1": message["best_5_buy_data"][0]["quantity"],
+                "Top Buy Price": max(
+                    (
+                        message.get("best_5_buy_data")[i].get("price")
+                        for i in range(0, 5)
+                    )
+                ),
+                "Bidx1": message.get("best_5_buy_data")[0].get("price"),
                 "Bidx2": message.get("best_5_buy_data")[1].get("price"),
                 "Bidx3": message.get("best_5_buy_data")[2].get("price"),
                 "Bidx4": message.get("best_5_buy_data")[3].get("price"),
                 "Bidx5": message.get("best_5_buy_data")[4].get("price"),
                 "Volume": message.get("volume_trade_for_the_day"),
-                "Last Traded Price": message.get("last_traded_price") / 100,
+                "Last Traded Price": message.get("last_traded_price"),
                 "Open Interest": message.get("open_interest"),
+                "Top Sell Price": max(
+                    (
+                        message.get("best_5_sell_data")[i].get("price")
+                        for i in range(0, 5)
+                    )
+                ),
                 "Askx1": message.get("best_5_sell_data")[0].get("price"),
                 "Askx2": message.get("best_5_sell_data")[1].get("price"),
                 "Askx3": message.get("best_5_sell_data")[2].get("price"),
@@ -67,14 +79,12 @@ def run(dct, token_list):
                 try:
                     df1 = pd.concat(
                         [df1, pd.DataFrame([df_msg])], ignore_index=True)
-                    print(df1)
                 except:
                     traceback.print_exc()
             elif idx == 1:
                 try:
                     df2 = pd.concat(
                         [df2, pd.DataFrame([df_msg])], ignore_index=True)
-                    print(df2)
                 except:
                     traceback.print_exc()
 
