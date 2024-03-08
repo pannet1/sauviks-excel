@@ -6,6 +6,7 @@ import pandas as pd
 import xlwings as xw
 import os
 import traceback
+import datetime
 
 input_xlsx = "Books1.xlsx"
 
@@ -15,7 +16,7 @@ def addActivate(wb, sheetName):
     try:
         sht = wb.sheets(sheetName)
     except Exception as e:
-        traceback.print_exc()
+        # traceback.print_exc()
         sht = wb.sheets.add(sheetName)
     return sht
 
@@ -28,8 +29,11 @@ def wsocket(**dct):
         api_key=dct["api_key"],
         client_code=dct["client_code"],
         feed_token=dct["feed_token"],
-        max_retry_attempt=2, retry_strategy=0,
-        retry_delay=10, retry_duration=30)
+        max_retry_attempt=2,
+        retry_strategy=0,
+        retry_delay=10,
+        retry_duration=30,
+    )
     return sws
 
 
@@ -48,6 +52,13 @@ def get_workbook():
 wb = get_workbook()
 
 
+def get_ist_time(unix_time):
+    dt_object = datetime.datetime.fromtimestamp(unix_time)
+    # ist_offset = datetime.timedelta(hours=5, minutes=30)
+    ist_dt_object = dt_object  # + ist_offset
+    return ist_dt_object.strftime("%d %m %Y %H:%M:%S")
+
+
 def run(dct, token_list):
     global df1, df2
     df1 = pd.DataFrame()
@@ -62,7 +73,7 @@ def run(dct, token_list):
         some_error_condition = False
         if some_error_condition:
             error_message = "Simulated error"
-            if hasattr(wsapp, 'on_error'):
+            if hasattr(wsapp, "on_error"):
                 wsapp.on_error("Custom Error Type", error_message)
         else:
             sws.subscribe(correlation_id, mode, token_list)
@@ -73,48 +84,56 @@ def run(dct, token_list):
             pprint(message)
             _token_list: list = token_list[0].get("tokens")
             idx = _token_list.index(message.get("token", "0"))
-            df_msg = {
-                "Last Traded Time": message.get("last_traded_timestamp"),
-                "Top Buy Price": max(
-                    (
-                        message.get("best_5_buy_data")[i].get("price")
-                        for i in range(0, 5)
-                    )
-                ),
-                "Bidx1": message.get("best_5_buy_data")[0].get("price"),
-                "Bidx2": message.get("best_5_buy_data")[1].get("price"),
-                "Bidx3": message.get("best_5_buy_data")[2].get("price"),
-                "Bidx4": message.get("best_5_buy_data")[3].get("price"),
-                "Bidx5": message.get("best_5_buy_data")[4].get("price"),
-                "Volume": message.get("volume_trade_for_the_day"),
-                "Last Traded Price": message.get("last_traded_price"),
-                "Open Interest": message.get("open_interest"),
-                "Top Sell Price": max(
-                    (
-                        message.get("best_5_sell_data")[i].get("price")
-                        for i in range(0, 5)
-                    )
-                ),
-                "Askx1": message.get("best_5_sell_data")[0].get("price"),
-                "Askx2": message.get("best_5_sell_data")[1].get("price"),
-                "Askx3": message.get("best_5_sell_data")[2].get("price"),
-                "Askx4": message.get("best_5_sell_data")[3].get("price"),
-                "Askx5": message.get("best_5_sell_data")[4].get("price"),
-            }
-            if idx == 0:
-                try:
-                    df1 = pd.concat([df1, pd.DataFrame([df_msg])], ignore_index=True)
-                    ws1 = addActivate(wb, "Sheet1")
-                    ws1["A1"].value = df1
-                except:
-                    traceback.print_exc()
-            elif idx == 1:
-                try:
-                    df2= pd.concat([df2, pd.DataFrame([df_msg])], ignore_index=True)
-                    ws2 = addActivate(wb, "Sheet2")
-                    ws2["A1"].value = df2
-                except:
-                    traceback.print_exc()
+            current_token = message.get("token")
+            # {'BANKNIFTY27MAR24FUT': {'exchange': 'NFO', 'token': '36611'}, 'NIFTY28MAR24FUT': {'exchange': 'NFO', 'token': '36612'}}
+            sheet_name = None
+            for instrument_name, value in dct_sym_dtls.items():
+                if value['token'] == current_token:
+                    sheet_name = instrument_name
+                    break
+            if sheet_name:
+                df_msg = {
+                    "Last Traded Time": get_ist_time(message.get("last_traded_timestamp")),
+                    "Top Buy Price": message.get("high_price_of_the_day") / 100,
+                    "Bidx1": message.get("best_5_buy_data")[0].get("price") / 100,
+                    "Bid Qtyx1": message.get("best_5_buy_data")[0]["quantity"],
+                    "Bidx2": message.get("best_5_buy_data")[1].get("price") / 100,
+                    "Bid Qtyx2": message.get("best_5_buy_data")[1]["quantity"],
+                    "Bidx3": message.get("best_5_buy_data")[2].get("price") / 100,
+                    "Bid Qtyx3": message.get("best_5_buy_data")[2]["quantity"],
+                    "Bidx4": message.get("best_5_buy_data")[3].get("price") / 100,
+                    "Bid Qtyx4": message.get("best_5_buy_data")[3]["quantity"],
+                    "Bidx5": message.get("best_5_buy_data")[4].get("price") / 100,
+                    "Bid Qtyx5": message.get("best_5_buy_data")[4]["quantity"],
+                    "Volume": message.get("volume_trade_for_the_day"),
+                    "Last Traded Price": message.get("last_traded_price") / 100,
+                    "Open Interest": message.get("open_interest"),
+                    "Top Sell Price": message.get("low_price_of_the_day") / 100,
+                    "Askx1": message.get("best_5_sell_data")[0].get("price") / 100,
+                    "Ask Qtyx1": message.get("best_5_sell_data")[0]["quantity"],
+                    "Askx2": message.get("best_5_sell_data")[1].get("price") / 100,
+                    "Ask Qtyx2": message.get("best_5_sell_data")[1]["quantity"],
+                    "Askx3": message.get("best_5_sell_data")[2].get("price") / 100,
+                    "Ask Qtyx3": message.get("best_5_sell_data")[2]["quantity"],
+                    "Askx4": message.get("best_5_sell_data")[3].get("price") / 100,
+                    "Ask Qtyx4": message.get("best_5_sell_data")[3]["quantity"],
+                    "Askx5": message.get("best_5_sell_data")[4].get("price") / 100,
+                    "Ask Qtyx5": message.get("best_5_sell_data")[4]["quantity"],
+                }
+                if idx == 0:
+                    try:
+                        df1 = pd.concat([df1, pd.DataFrame([df_msg])], ignore_index=True)
+                        ws1 = addActivate(wb, sheet_name)
+                        ws1["A1"].value = df1
+                    except:
+                        traceback.print_exc()
+                elif idx == 1:
+                    try:
+                        df2 = pd.concat([df2, pd.DataFrame([df_msg])], ignore_index=True)
+                        ws2 = addActivate(wb, sheet_name)
+                        ws2["A1"].value = df2
+                    except:
+                        traceback.print_exc()
 
     def on_error(wsapp, error):
         logger.error(error)
@@ -142,9 +161,8 @@ def run(dct, token_list):
 #
 if __name__ == "__main__":
     from __init__ import CRED, FUTL
-
-    D_EXCHCODE = {'NSE': 1, 'NFO': 2,
-                  'BSE': 3, 'MCX': 5, 'NCDEX': 7, 'CDS': 13}
+    global dct_sym_dtls
+    D_EXCHCODE = {"NSE": 1, "NFO": 2, "BSE": 3, "MCX": 5, "NCDEX": 7, "CDS": 13}
 
     dct = FUTL.get_lst_fm_yml(CRED)
     api = login(dct["angelone"])
@@ -156,14 +174,16 @@ if __name__ == "__main__":
     exchange_data = {}
     # Iterate over the original dictionary
     for key, value in dct_sym_dtls.items():
-        exchange = value['exchange']
-        token = value['token']
+        exchange = value["exchange"]
+        token = value["token"]
         # If the exchange is not in the exchange_data dictionary, initialize it
         if exchange not in exchange_data:
             exchange_data[exchange] = {
-                'exchangeType': D_EXCHCODE[exchange], 'tokens': []}
+                "exchangeType": D_EXCHCODE[exchange],
+                "tokens": [],
+            }
         # Append the token to the list of tokens for the corresponding exchange
-        exchange_data[exchange]['tokens'].append(token)
+        exchange_data[exchange]["tokens"].append(token)
     # Convert the dictionary values to a list
     result = list(exchange_data.values())
     logger.info(result)
