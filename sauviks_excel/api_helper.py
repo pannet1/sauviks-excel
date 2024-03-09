@@ -1,6 +1,7 @@
 from omspy_brokers.angel_one import AngelOne
 from __init__ import UTIL
 from pprint import pprint
+from rich import print
 
 
 def login(config):
@@ -38,6 +39,8 @@ def tkn_from_config(broker, search: list) -> dict:
 
 if __name__ == "__main__":
     from __init__ import CRED, FUTL
+    import pandas as pd
+    # pd.set_option('display.max_rows', None)
 
     dct = FUTL.get_lst_fm_yml(CRED)
     print(dct)
@@ -51,10 +54,22 @@ if __name__ == "__main__":
         }
         broker._routes.update(route)
         params = {
-            "name": "TCS",
+            "name": "NIFTY",
             "expirydate": "28MAR2024"
         }
         marketDataResult = broker._postRequest("api.market.greeks", params)
         return marketDataResult
 
-    print(greeks(api.obj))
+    while True:
+        resp = greeks(api.obj)
+        if isinstance(resp, dict) and \
+                resp.get("data", None):
+            keys = ["name", "expiry", "tradeVolume"]
+            dct = [{k: v for k, v in dct.items()
+                    if k not in keys}
+                   for dct in resp["data"]
+                   ]
+
+            df = pd.DataFrame(dct)
+            print(df.head(n=30))
+            UTIL.slp_for(1)

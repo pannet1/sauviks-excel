@@ -48,21 +48,28 @@ def run(dct, token_list):
             idx = _token_list.index(message.get("token", "0"))
             df_msg = {
                 "Last Traded Time": message.get("last_traded_timestamp"),
-                "Bidx1": message["best_5_buy_data"][0]["price"] / 100,
-                "Qtyx1": message["best_5_buy_data"][0]["quantity"],
-                "Bidx2": message.get("best_5_buy_data")[1].get("price"),
-                "Bidx3": message.get("best_5_buy_data")[2].get("price"),
-                "Bidx4": message.get("best_5_buy_data")[3].get("price"),
-                "Bidx5": message.get("best_5_buy_data")[4].get("price"),
+            }
+            for i in range(0, 4):
+                df_msg.update(
+                    {
+                        f"Bid_X{i+1}": message.get("best_5_buy_data")[i].get("price"),
+                        f"Qty_X{i+1}": message.get("best_5_buy_data")[i].get("quantity"),
+                        f"Ord_X{i+1}": message.get("best_5_buy_data")[i].get("no of orders")
+                    }
+                )
+            df_msg.update({
                 "Volume": message.get("volume_trade_for_the_day"),
                 "Last Traded Price": message.get("last_traded_price") / 100,
                 "Open Interest": message.get("open_interest"),
-                "Askx1": message.get("best_5_sell_data")[0].get("price"),
-                "Askx2": message.get("best_5_sell_data")[1].get("price"),
-                "Askx3": message.get("best_5_sell_data")[2].get("price"),
-                "Askx4": message.get("best_5_sell_data")[3].get("price"),
-                "Askx5": message.get("best_5_sell_data")[4].get("price"),
-            }
+            })
+            for i in range(0, 4):
+                df_msg.update(
+                    {
+                        f"Ask_X{i+1}": message.get("best_5_sell_data")[i].get("price"),
+                        f"Qty_X{i+1}": message.get("best_5_sell_data")[i].get("quantity"),
+                        f"Ord_X{i+1}": message.get("best_5_sell_data")[i].get("no of orders")
+                    }
+                )
             if idx == 0:
                 try:
                     df1 = pd.concat(

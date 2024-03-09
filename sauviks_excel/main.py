@@ -95,41 +95,41 @@ def run(dct, token_list):
                 df_msg = {
                     "Last Traded Time": get_ist_time(message.get("last_traded_timestamp")),
                     "Top Buy Price": message.get("high_price_of_the_day") / 100,
-                    "Bidx1": message.get("best_5_buy_data")[0].get("price") / 100,
-                    "Bid Qtyx1": message.get("best_5_buy_data")[0]["quantity"],
-                    "Bidx2": message.get("best_5_buy_data")[1].get("price") / 100,
-                    "Bid Qtyx2": message.get("best_5_buy_data")[1]["quantity"],
-                    "Bidx3": message.get("best_5_buy_data")[2].get("price") / 100,
-                    "Bid Qtyx3": message.get("best_5_buy_data")[2]["quantity"],
-                    "Bidx4": message.get("best_5_buy_data")[3].get("price") / 100,
-                    "Bid Qtyx4": message.get("best_5_buy_data")[3]["quantity"],
-                    "Bidx5": message.get("best_5_buy_data")[4].get("price") / 100,
-                    "Bid Qtyx5": message.get("best_5_buy_data")[4]["quantity"],
+                }
+                for i in range(0, 4):
+                    df_msg.update(
+                        {
+                            f"Bid_X{i+1}": message.get("best_5_buy_data")[i].get("price") / 100,
+                            f"Qty_X{i+1}": message.get("best_5_buy_data")[i].get("quantity"),
+                            f"Ord_X{i+1}": message.get("best_5_buy_data")[i].get("no of orders")
+                        }
+                    )
+                df_msg.update({
                     "Volume": message.get("volume_trade_for_the_day"),
                     "Last Traded Price": message.get("last_traded_price") / 100,
                     "Open Interest": message.get("open_interest"),
                     "Top Sell Price": message.get("low_price_of_the_day") / 100,
-                    "Askx1": message.get("best_5_sell_data")[0].get("price") / 100,
-                    "Ask Qtyx1": message.get("best_5_sell_data")[0]["quantity"],
-                    "Askx2": message.get("best_5_sell_data")[1].get("price") / 100,
-                    "Ask Qtyx2": message.get("best_5_sell_data")[1]["quantity"],
-                    "Askx3": message.get("best_5_sell_data")[2].get("price") / 100,
-                    "Ask Qtyx3": message.get("best_5_sell_data")[2]["quantity"],
-                    "Askx4": message.get("best_5_sell_data")[3].get("price") / 100,
-                    "Ask Qtyx4": message.get("best_5_sell_data")[3]["quantity"],
-                    "Askx5": message.get("best_5_sell_data")[4].get("price") / 100,
-                    "Ask Qtyx5": message.get("best_5_sell_data")[4]["quantity"],
-                }
+                })
+                for i in range(0, 4):
+                    df_msg.update(
+                        {
+                            f"Ask_X{i+1}": message.get("best_5_sell_data")[i].get("price") / 100,
+                            f"Qty_X{i+1}": message.get("best_5_sell_data")[i].get("quantity"),
+                            f"Ord_X{i+1}": message.get("best_5_sell_data")[i].get("no of orders")
+                        }
+                    )
                 if idx == 0:
                     try:
-                        df1 = pd.concat([df1, pd.DataFrame([df_msg])], ignore_index=True)
+                        df1 = pd.concat(
+                            [df1, pd.DataFrame([df_msg])], ignore_index=True)
                         ws1 = addActivate(wb, sheet_name)
                         ws1["A1"].value = df1
                     except:
                         traceback.print_exc()
                 elif idx == 1:
                     try:
-                        df2 = pd.concat([df2, pd.DataFrame([df_msg])], ignore_index=True)
+                        df2 = pd.concat(
+                            [df2, pd.DataFrame([df_msg])], ignore_index=True)
                         ws2 = addActivate(wb, sheet_name)
                         ws2["A1"].value = df2
                     except:
@@ -162,7 +162,8 @@ def run(dct, token_list):
 if __name__ == "__main__":
     from __init__ import CRED, FUTL
     global dct_sym_dtls
-    D_EXCHCODE = {"NSE": 1, "NFO": 2, "BSE": 3, "MCX": 5, "NCDEX": 7, "CDS": 13}
+    D_EXCHCODE = {"NSE": 1, "NFO": 2, "BSE": 3,
+                  "MCX": 5, "NCDEX": 7, "CDS": 13}
 
     dct = FUTL.get_lst_fm_yml(CRED)
     api = login(dct["angelone"])
