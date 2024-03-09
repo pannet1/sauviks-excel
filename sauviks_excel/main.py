@@ -100,8 +100,8 @@ def run(dct, token_list):
                     df_msg.update(
                         {
                             f"Bid_X{i+1}": message.get("best_5_buy_data")[i].get("price") / 100,
-                            f"Qty_X{i+1}": message.get("best_5_buy_data")[i].get("quantity"),
-                            f"Ord_X{i+1}": message.get("best_5_buy_data")[i].get("no of orders")
+                            f"Bid_Qty_X{i+1}": message.get("best_5_buy_data")[i].get("quantity"),
+                            f"Bid_Ord_X{i+1}": message.get("best_5_buy_data")[i].get("no of orders")
                         }
                     )
                 df_msg.update({
@@ -114,8 +114,8 @@ def run(dct, token_list):
                     df_msg.update(
                         {
                             f"Ask_X{i+1}": message.get("best_5_sell_data")[i].get("price") / 100,
-                            f"Qty_X{i+1}": message.get("best_5_sell_data")[i].get("quantity"),
-                            f"Ord_X{i+1}": message.get("best_5_sell_data")[i].get("no of orders")
+                            f"Ask_Qty_X{i+1}": message.get("best_5_sell_data")[i].get("quantity"),
+                            f"Ask_Ord_X{i+1}": message.get("best_5_sell_data")[i].get("no of orders")
                         }
                     )
                 if idx == 0:
