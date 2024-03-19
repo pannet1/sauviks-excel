@@ -63,7 +63,7 @@ def run(dct, token_list):
     global df1, df2
     df1 = pd.DataFrame()
     df2 = pd.DataFrame()
-    correlation_id = "sauviks"
+    correlation_id = "souviks"
     action = 1
     mode = 3
     sws = wsocket(**dct)
@@ -81,6 +81,7 @@ def run(dct, token_list):
     def on_data(wsapp, message):
         global df1, df2
         if isinstance(message, dict):
+            print(get_ist_time(message.get("last_traded_timestamp")))
             _token_list: list = token_list[0].get("tokens")
             idx = _token_list.index(message.get("token", "0"))
             current_token = message.get("token")

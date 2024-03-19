@@ -49,7 +49,7 @@ def run(dct, token_list):
             df_msg = {
                 "Last Traded Time": message.get("last_traded_timestamp"),
             }
-            for i in range(0, 4):
+            for i in range(0, 5):
                 df_msg.update(
                     {
                         f"Bid_X{i+1}": message.get("best_5_buy_data")[i].get("price"),
@@ -62,7 +62,7 @@ def run(dct, token_list):
                 "Last Traded Price": message.get("last_traded_price") / 100,
                 "Open Interest": message.get("open_interest"),
             })
-            for i in range(0, 4):
+            for i in range(0, 5):
                 df_msg.update(
                     {
                         f"Ask_X{i+1}": message.get("best_5_sell_data")[i].get("price"),
