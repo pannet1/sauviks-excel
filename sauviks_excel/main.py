@@ -1,14 +1,14 @@
 from SmartApi.smartWebSocketV2 import SmartWebSocketV2
 from logzero import logger
 from api_helper import credentials, login, tkn_from_config
-from pprint import pprint
 import pandas as pd
 import xlwings as xw
 import os
 import traceback
 import datetime
 
-input_xlsx = "Books1.xlsx"
+fpath = "C:\\Users\\PC\\Desktop\\OCPRADIP\\"
+input_xlsx = fpath + "BANK NIFTY RECORD SHEET - MASTER COPY.xlsm"
 
 
 def addActivate(wb, sheetName):
@@ -81,7 +81,6 @@ def run(dct, token_list):
     def on_data(wsapp, message):
         global df1, df2
         if isinstance(message, dict):
-            pprint(message)
             _token_list: list = token_list[0].get("tokens")
             idx = _token_list.index(message.get("token", "0"))
             current_token = message.get("token")
@@ -122,6 +121,7 @@ def run(dct, token_list):
                     try:
                         df1 = pd.concat(
                             [df1, pd.DataFrame([df_msg])], ignore_index=True)
+                        print(df1.tail)
                         ws1 = addActivate(wb, sheet_name)
                         ws1["A1"].value = df1
                     except:
@@ -130,6 +130,7 @@ def run(dct, token_list):
                     try:
                         df2 = pd.concat(
                             [df2, pd.DataFrame([df_msg])], ignore_index=True)
+                        print(df2.tail)
                         ws2 = addActivate(wb, sheet_name)
                         ws2["A1"].value = df2
                     except:
